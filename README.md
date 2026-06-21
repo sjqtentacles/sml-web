@@ -111,11 +111,56 @@ test/                       Harness suite (16 checks)
 ## The wider stack
 
 This repo sits at the top of a layered set of small, pure, dual-compiler
-`sml-*` libraries (foundations → protocol → web layer → umbrella). The one
-documented impure edge is `sml-serve`, an MLton-only socket adapter (see the
-plan) that drives an `sml-web` app against a real TCP listener — kept out of
-this portable, deterministic core.
+`sml-*` libraries (foundations → protocol → web layer → umbrella). Every repo
+is Basis-only, deterministic, and built test-first with byte-identical output
+under MLton and Poly/ML. Browse the whole project by the
+[`sjqtentacles-web`](https://github.com/topics/sjqtentacles-web) topic.
+
+**Tier 0 — foundations** (no `sml-*` deps)
+
+| Repo | What it does |
+| --- | --- |
+| [sml-buffer](https://github.com/sjqtentacles/sml-buffer) | Growable byte/char buffer + rope-style concat |
+| [sml-codec](https://github.com/sjqtentacles/sml-codec) | Base64/Base16, SHA-1, SHA-256, CRC-32 |
+| [sml-random](https://github.com/sjqtentacles/sml-random) | Splittable deterministic PRNG (SplitMix64) |
+| [sml-log](https://github.com/sjqtentacles/sml-log) | Leveled logging with a pluggable sink |
+| [sml-config](https://github.com/sjqtentacles/sml-config) | Typed config from a key/value source |
+
+**Tier 1 — protocol layer**
+
+| Repo | What it does |
+| --- | --- |
+| [sml-crypto](https://github.com/sjqtentacles/sml-crypto) | HMAC-SHA256, constant-time compare, signed tokens |
+| [sml-uri](https://github.com/sjqtentacles/sml-uri) | RFC 3986 URIs + form-urlencoded |
+| [sml-http](https://github.com/sjqtentacles/sml-http) | RFC 9110/9112 message model + framing |
+| [sml-mime](https://github.com/sjqtentacles/sml-mime) | Media types + multipart/form-data |
+| [sml-deflate](https://github.com/sjqtentacles/sml-deflate) | DEFLATE inflate + zlib/gzip |
+| [sml-ws](https://github.com/sjqtentacles/sml-ws) | RFC 6455 WebSocket handshake + frames |
+
+**Tier 2 — web layer**
+
+| Repo | What it does |
+| --- | --- |
+| [sml-cookie](https://github.com/sjqtentacles/sml-cookie) | RFC 6265 cookies + signed cookies |
+| [sml-html](https://github.com/sjqtentacles/sml-html) | HTML AST with safe-by-default escaping |
+| [sml-negotiate](https://github.com/sjqtentacles/sml-negotiate) | `Accept*` content negotiation |
+| [sml-router](https://github.com/sjqtentacles/sml-router) | Path patterns + method dispatch |
+| [sml-forms](https://github.com/sjqtentacles/sml-forms) | Typed body decoding (validation applicative) |
+| [sml-session](https://github.com/sjqtentacles/sml-session) | In-memory + signed-cookie sessions |
+| [sml-middleware](https://github.com/sjqtentacles/sml-middleware) | Composable `handler -> handler` combinators |
+
+**Tier 3 — umbrella & edge**
+
+| Repo | What it does |
+| --- | --- |
+| **sml-web** (this repo) | Wires the above into one `request -> response` app |
+| [sml-serve](https://github.com/sjqtentacles/sml-serve) | Documented MLton-only socket adapter (the one impure edge) |
+
+The impure edge, `sml-serve`, is an MLton-only socket adapter that drives an
+`sml-web` app against a real TCP listener — kept out of this portable,
+deterministic core and shipped as a design document only.
 
 ## License
 
 MIT
+
