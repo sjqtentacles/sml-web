@@ -1,0 +1,13 @@
+# Built binaries
+/bin/
+
+# Poly/ML export artifacts
+*.o
+*.obj
+
+# smlpkg downloads dependencies here; ours are vendored and committed
+/lib/github.com/diku-dk/
+
+# Editor / OS noise
+.DS_Store
+*~

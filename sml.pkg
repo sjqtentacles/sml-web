@@ -1,0 +1,11 @@
+package github.com/sjqtentacles/sml-web
+
+require {
+  github.com/sjqtentacles/sml-router
+  github.com/sjqtentacles/sml-middleware
+  github.com/sjqtentacles/sml-session
+  github.com/sjqtentacles/sml-negotiate
+  github.com/sjqtentacles/sml-html
+  github.com/sjqtentacles/sml-forms
+  github.com/sjqtentacles/sml-http
+}
