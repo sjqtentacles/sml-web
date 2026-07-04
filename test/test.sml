@@ -11,6 +11,14 @@ struct
       method ^ " " ^ target ^ " HTTP/1.1\r\n" ^ hdrLines ^ "\r\n"
     end
 
+  (* Parse a JSON document, treating a parse error as a caught failure so a
+     boundary that used to crash surfaces as a normal FAIL rather than an
+     uncaught exception aborting the run. *)
+  fun parseJsonOpt s =
+    case Json.parseJson s of
+        CharParsec.Ok v => SOME v
+      | CharParsec.Err _ => NONE
+
   fun run () =
     let
       val log = ref ([] : string list)
@@ -91,6 +99,51 @@ struct
         (500, #status (valOf (Web.runString boomApp (rawReq "GET" "/boom" []))))
       val () = checkString "error body" ("caught",
         #body (valOf (Web.runString boomApp (rawReq "GET" "/boom" []))))
+
+      (* ---- JSON large-integer boundary (JInt is IntInf.int) ----
+         A request/response integer past 2^31 (e.g. a millisecond timestamp or a
+         64-bit id) must flow through the web stack's vendored sml-json/sml-forms
+         without crashing and without losing digits. Before JInt was widened to
+         IntInf.int this value overflowed under MLton (fixed-width 32-bit default
+         int); it renders identically under MLton and Poly/ML (fixed-width 63-bit
+         default int) because IntInf is arbitrary precision on both. *)
+      val () = section "json integers"
+      val bigStr = "1700000000000"                (* > 2^31 (2147483648) *)
+      val body = "{\"id\": " ^ bigStr ^ ", \"name\": \"ada\"}"
+
+      (* Parses without crashing (old int-typed JInt could not represent it). *)
+      val parsed = parseJsonOpt body
+      val () = checkBool "large int parses (no overflow crash)" (true, isSome parsed)
+      val doc = valOf parsed
+
+      (* The AST carries the exact IntInf value. *)
+      val idJInt =
+        case doc of
+            Json.JObj kvs =>
+              (case List.find (fn (k, _) => k = "id") kvs of
+                   SOME (_, v) => v | NONE => Json.JNull)
+          | _ => Json.JNull
+      val () = checkBool "id is a JInt"
+        (true, case idJInt of Json.JInt _ => true | _ => false)
+      val () = checkString "large int preserved losslessly in AST"
+        (bigStr, case idJInt of Json.JInt n => IntInf.toString n | _ => "")
+
+      (* Serializing back out is lossless (no scientific notation, no truncation). *)
+      val () = checkBool "large int survives serialize round-trip"
+        (true, String.isSubstring bigStr (JsonPretty.toString doc))
+
+      (* Flattening through sml-forms (the vendored JInt -> IntInf.toString site)
+         yields the value verbatim, usable as a form/query field. *)
+      val src = Forms.fromJson doc
+      val () = checkBool "forms flattens large JInt losslessly"
+        (true, src "id" = SOME bigStr)
+
+      (* asInt narrows only when the value fits this compiler's Int; a JStr is
+         never an int. This guards the recommended replacement for `JInt n`. *)
+      val () = checkBool "asInt narrows a small JInt"
+        (true, Json.asInt (Json.JInt 7) = SOME 7)
+      val () = checkBool "asInt rejects a non-integer"
+        (true, Json.asInt (Json.JStr "x") = NONE)
     in
       ()
     end

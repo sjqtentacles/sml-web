@@ -73,7 +73,14 @@ make test-poly   # Poly/ML
 make all-tests   # both
 ```
 
-**16 deterministic checks**, identical under MLton and Poly/ML.
+**23 deterministic checks**, identical under MLton and Poly/ML.
+
+> JSON integers (`Json.JInt`) carry an arbitrary-precision `IntInf.int`, so a
+> value past 2^31 (a 64-bit id, a millisecond timestamp) flows through the
+> stack losslessly and *identically* under MLton (fixed-width 32-bit default
+> `int`) and Poly/ML (fixed-width 63-bit default `int`) -- neither of which
+> could hold it as a machine `int`. The `json integers` section covers this
+> boundary; use `Json.asInt` to narrow to an `int` where the value fits.
 
 > Note: as the umbrella vendors several libraries that themselves share lower
 > deps (`sml-http`, `sml-uri`, `sml-parsec`, ...), the Poly/ML `tools/polybuild`
@@ -105,7 +112,7 @@ lib/github.com/sjqtentacles/sml-web/
   web.sig  web.sml          app type + run + negotiation helpers
   sources.mlb  sml-web.mlb
 examples/app.sml            end-to-end example app
-test/                       Harness suite (16 checks)
+test/                       Harness suite (23 checks)
 ```
 
 ## The wider stack
