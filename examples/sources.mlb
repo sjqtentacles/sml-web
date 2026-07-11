@@ -2,4 +2,4 @@ $(SML_LIB)/basis/basis.mlb
 
 ../lib/github.com/sjqtentacles/sml-web/sources.mlb
 
-app.sml
+demo.sml
